@@ -70,8 +70,9 @@ os.makedirs(upload_dir, exist_ok=True)
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
     
     video_path = os.path.join(upload_dir, cast(str, file.filename))
+    content: bytes = await file.read()
     with open(video_path, "wb") as f:
-        f.write(file.read())
+        f.write(content)
     #Potential option
     #with open(file_path, "wb") as buffer:
      #   shutil.copyfileobj(file.file, buffer)
