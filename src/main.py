@@ -1,24 +1,35 @@
 from datetime import datetime
 import torch
 from transformers import AutoModel, AutoTokenizer
+from typing import Union, Any, cast
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, File, UploadFile, Form
+from pydantic import BaseModel
+import asyncio
+import os
 from src.preprocessing_functions import load_video
 
-# evaluation setting
-max_num_frames = 512
-generation_config = dict(
-    do_sample=False,
-    temperature=0.0,
-    max_new_tokens=1024,
-    top_p=0.1,
-    num_beams=1
-)
-video_path = "/content/drive/MyDrive/Powerlifting/Videos/IMG_0746.MOV"
-num_segments=128
-model_path = 'OpenGVLab/InternVideo2_5_Chat_8B'
-tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-model = AutoModel.from_pretrained(model_path, trust_remote_code=True).half().cuda().to(torch.bfloat16)
+config: dict[str, Any] = {"max_num_frames": 512}
 
-def get_technique_review(video_path, generation_config):
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    #Stuff we want executed upon the app startup
+    config["generation_config"] = dict(
+        do_sample=False,
+        temperature=0.0,
+        max_new_tokens=1024,
+        top_p=0.1,
+        num_beams=1
+    )
+
+    config["num_segments"] = 128
+    model_path = 'OpenGVLab/InternVideo2_5_Chat_8B'
+    config["tokenizer"] = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    config["model"] = AutoModel.from_pretrained(model_path, trust_remote_code=True).half().cuda().to(torch.bfloat16)
+    yield
+
+def get_technique_review(video_path, num_segments, generation_config, model, tokenizer, exercise):
 
     with torch.no_grad():
         video_loading_start = datetime.now()
@@ -29,15 +40,19 @@ def get_technique_review(video_path, generation_config):
 
         # single-turn conversation
         start1 = datetime.now()
-        question = """
-              You need to check the form of the squat in the video. comment on the follwoing things:
-              1. Feet: Are the heals or toes lifting from the ground.
-              2. Knees: Are they collapsing inward
-              3. Hips: Are they shooting up in the ascent before the knees or moving to the sides
-              4. Back: Is the back rounding during the movement
-              5. Depth: Are the hips droping at least to the same level of the knees
-              6. Bar path: If visible, is the bar path a straight line through the mid foot
-              """
+        if exercise == "squat":
+            question = """
+                You need to check the form of the squat in the video. comment on the follwoing things:
+                1. Feet: Are the heals or toes lifting from the ground.
+                2. Knees: Are they collapsing inward
+                3. Hips: Are they shooting up in the ascent before the knees or moving to the sides
+                4. Back: Is the back rounding during the movement
+                5. Depth: Are the hips droping at least to the same level of the knees
+                6. Bar path: If visible, is the bar path a straight line through the mid foot
+                """
+        else:
+            question = ""
+
         input = video_prefix + question
         output, chat_history = model.chat(tokenizer, pixel_values, input, generation_config, num_patches_list=num_patches_list, history=None, return_history=True)
         print("Latency 1:", datetime.now() - start1)
@@ -46,5 +61,25 @@ def get_technique_review(video_path, generation_config):
 
     return review
 
-if __name__ == "__main__":
+app = FastAPI(lifespan=lifespan)
+
+upload_dir = "./videos"
+os.makedirs(upload_dir, exist_ok=True)
+
+@app.route("/review")
+async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
     
+    video_path = os.path.join(upload_dir, cast(str, file.filename))
+    with open(video_path, "wb") as f:
+        f.write(file.read())
+    #Potential option
+    #with open(file_path, "wb") as buffer:
+     #   shutil.copyfileobj(file.file, buffer)
+    num_segments = config["num_segments"]
+    generation_config = config["generation_config"]
+    model = config["model"]
+    tokenizer = config["tokenizer"]
+
+    review_task = asyncio.to_thread(get_technique_review, video_path, num_segments, generation_config, model, tokenizer, exercise)
+    feedback = await review_task
+    return {"feedback": feedback}

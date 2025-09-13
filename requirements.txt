@@ -1,6 +1,7 @@
 av
 imageio
 decord
+fastapi==0.116.1
 flash-attn --no-build-isolation
 numpy==2.0.2
 pillow==11.3.0
