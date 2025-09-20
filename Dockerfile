@@ -27,4 +27,5 @@ COPY . .
 
 EXPOSE 8080
 
+#Infrastucture disclaimer: Need >32GB RAM CPU and an L4 GPU (>18GB GPU RAM) at least to run this model. 
 CMD ["gunicorn", "src.main:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:8080"]
