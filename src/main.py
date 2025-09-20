@@ -68,19 +68,21 @@ os.makedirs(upload_dir, exist_ok=True)
 
 @app.route("/review")
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
+    try:
+        video_path = os.path.join(upload_dir, cast(str, file.filename))
+        content: bytes = await file.read()
+        with open(video_path, "wb") as f:
+            f.write(content)
+        #Potential option
+        #with open(file_path, "wb") as buffer:
+         #   shutil.copyfileobj(file.file, buffer)
+        num_segments = config["num_segments"]
+        generation_config = config["generation_config"]
+        model = config["model"]
+        tokenizer = config["tokenizer"]
     
-    video_path = os.path.join(upload_dir, cast(str, file.filename))
-    content: bytes = await file.read()
-    with open(video_path, "wb") as f:
-        f.write(content)
-    #Potential option
-    #with open(file_path, "wb") as buffer:
-     #   shutil.copyfileobj(file.file, buffer)
-    num_segments = config["num_segments"]
-    generation_config = config["generation_config"]
-    model = config["model"]
-    tokenizer = config["tokenizer"]
-
-    review_task = asyncio.to_thread(get_technique_review, video_path, num_segments, generation_config, model, tokenizer, exercise)
-    feedback = await review_task
-    return {"feedback": feedback}
+        review_task = asyncio.to_thread(get_technique_review, video_path, num_segments, generation_config, model, tokenizer, exercise)
+        feedback = await review_task
+        return {"feedback": feedback}, 200
+    except Exception as e:
+        return {"Error": str(e)}
