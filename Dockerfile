@@ -15,6 +15,9 @@ RUN ln -sf /usr/bin/python3 /usr/bin/python && \
 # Set working directory
 WORKDIR /app
 
+# Ensure build tools
+RUN pip install --no-cache-dir packaging setuptools wheel ninja
+
 # Install PyTorch separately (before installing other dependencies)
 RUN pip install flash-attn --no-build-isolation
 
