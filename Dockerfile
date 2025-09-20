@@ -16,7 +16,7 @@ RUN ln -sf /usr/bin/python3 /usr/bin/python && \
 WORKDIR /app
 
 # Install PyTorch separately (before installing other dependencies)
-RUN pip install --no-cache-dir torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install flash-attn --no-build-isolation
 
 # Copy and install dependencies first (improves build caching)
 COPY requirements.txt .
