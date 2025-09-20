@@ -25,6 +25,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code after dependencies are installed
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["gunicorn", "src.main:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:8000"]
+CMD ["gunicorn", "src.main:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "2", "-b", "0.0.0.0:8080"]
