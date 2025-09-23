@@ -19,7 +19,8 @@ WORKDIR /app
 RUN pip install --no-cache-dir packaging setuptools wheel ninja
 
 #Install torch before flash-attn since its a prerequisite:
-RUN pip install torch==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+RUN pip install torch==2.8.0+cu126 torchvision==0.23.0+cu126 torchaudio==2.8.0+cu126 \
+    --index-url https://download.pytorch.org/whl/cu126
 
 # Install PyTorch separately (before installing other dependencies)
 RUN pip install flash-attn --no-build-isolation
