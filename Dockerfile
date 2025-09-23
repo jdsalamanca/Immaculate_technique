@@ -1,5 +1,5 @@
 # Use a lightweight CUDA image as the base
-FROM nvidia/cuda:12.1.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.6.2-devel-ubuntu22.04
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -19,7 +19,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir packaging setuptools wheel ninja
 
 #Install torch before flash-attn since its a prerequisite:
-RUN pip install torch==2.8.0+cu126
+RUN pip install torch==2.8.0+cu126 --index-url https://download.pytorch.org/whl/cu126
 
 # Install PyTorch separately (before installing other dependencies)
 RUN pip install flash-attn --no-build-isolation
