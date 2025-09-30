@@ -2,8 +2,10 @@ av
 imageio
 decord
 fastapi==0.116.1
+gunicorn
 numpy==2.0.2
 pillow==11.3.0
 openai==1.104.2
 opencv-python
 transformers==4.40.1
+uvicorn
