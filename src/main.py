@@ -66,7 +66,7 @@ app = FastAPI(lifespan=lifespan)
 upload_dir = "./videos"
 os.makedirs(upload_dir, exist_ok=True)
 
-@app.route("/review")
+@app.post("/review")
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
     try:
         video_path = os.path.join(upload_dir, cast(str, file.filename))
@@ -87,6 +87,6 @@ async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
     except Exception as e:
         return {"Error": str(e)}
 
-@app.route("/test")
+@app.post("/test")
 async def test_endpoint(message: str=Form(...)):
     return {"config": config, "message": message}
