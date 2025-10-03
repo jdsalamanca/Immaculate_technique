@@ -80,7 +80,7 @@ async def init_model():
             if "model" not in config:
                 config["model"] = AutoModel.from_pretrained(model_path, trust_remote_code=True).half().cuda().to(torch.bfloat16)
             else:
-                message += "Model already loaded
+                message += "Model already loaded"
                 
         return {"Message": message, "Latency": str(datetime.now()-start)}
     except Exception as e:
