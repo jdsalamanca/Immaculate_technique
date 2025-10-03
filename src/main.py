@@ -24,9 +24,9 @@ async def lifespan(app: FastAPI):
     )
 
     config["num_segments"] = 128
-    #model_path = 'OpenGVLab/InternVideo2_5_Chat_8B'
-    #config["tokenizer"] = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    #config["model"] = AutoModel.from_pretrained(model_path, trust_remote_code=True).half().cuda().to(torch.bfloat16)
+    model_path = 'OpenGVLab/InternVideo2_5_Chat_8B'
+    config["tokenizer"] = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    config["model"] = AutoModel.from_pretrained(model_path, trust_remote_code=True).half().cuda().to(torch.bfloat16)
     yield
 
 def get_technique_review(video_path, num_segments, generation_config, model, tokenizer, exercise):
