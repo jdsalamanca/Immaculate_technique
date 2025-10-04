@@ -64,7 +64,7 @@ app = FastAPI(lifespan=lifespan)
 upload_dir = "./videos"
 os.makedirs(upload_dir, exist_ok=True)
 
-app.post("/init")
+@app.post("/init")
 async def init_model():
     try:
         start = datetime.now()
@@ -90,7 +90,7 @@ async def init_model():
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
     try:
         if "model" not in config and "tokenizer" not in config:
-            return {"Error": "Please initialize the mdoel first"}
+            return {"Error": "Please initialize the model first"}
         video_path = os.path.join(upload_dir, cast(str, file.filename))
         content: bytes = await file.read()
         with open(video_path, "wb") as f:
