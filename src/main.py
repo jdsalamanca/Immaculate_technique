@@ -69,22 +69,25 @@ async def init_model():
     try:
         start = datetime.now()
         async with load_lock: 
+            progress = "inside load_lock"
             #Lazy load of the model and tokenizer
             message = "Model and tokenizer succesfully loaded"
-            model_path = 'OpenGVLab/InternVideo2_5_Chat_8B'
-            
+            model_path = "OpenGVLab/InternVideo2_5_Chat_8B"
+            progress = "intialized message and model path"
             if "tokenizer" not in config:
                 config["tokenizer"] = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+                progress = "initialized tokenizer"
             else:
                 message = "Tokenizer already loaded"
             if "model" not in config:
                 config["model"] = AutoModel.from_pretrained(model_path, trust_remote_code=True).half().cuda().to(torch.bfloat16)
+                progress = "initialized model"
             else:
                 message += "Model already loaded"
                 
         return {"Message": message, "Latency": str(datetime.now()-start)}
     except Exception as e:
-        return {"Error": f"Error laoding model {str(e)}"}
+        return {"Error": f"Error laoding model: {str(e)}", "path":model_path, "path_type": str(type(model_path)), "progress": progress}
 
 @app.post("/review")
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
