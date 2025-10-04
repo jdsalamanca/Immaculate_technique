@@ -8,5 +8,7 @@ openai==1.104.2
 opencv-python
 pillow==11.3.0
 python-multipart
+#Sentencepiece is needed to load the model from huggingface
+sentencepiece==0.2.1
 transformers==4.40.1
 uvicorn
