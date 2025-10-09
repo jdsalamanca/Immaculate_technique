@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, Form
 from pydantic import BaseModel
 import asyncio
+import traceback
 import os
 from asyncio import Lock
 from src.preprocessing_functions import load_video
@@ -87,7 +88,8 @@ async def init_model():
                 
         return {"Message": message, "Latency": str(datetime.now()-start)}
     except Exception as e:
-        return {"Error": f"Error laoding model: {str(e)}", "path":model_path, "path_type": str(type(model_path)), "progress": progress}
+        tb_str = traceback.format_exc()
+        return {"Error": f"Error laoding model: {str(e)}", "traceback": tb_str, "path":model_path, "path_type": str(type(model_path)), "progress": progress}
 
 @app.post("/review")
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
