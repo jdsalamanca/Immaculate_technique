@@ -9,6 +9,7 @@ import asyncio
 import traceback
 import os
 from asyncio import Lock
+from huggingface_hub import snapshot_download
 from src.preprocessing_functions import load_video
 
 load_lock = Lock()
@@ -76,7 +77,8 @@ async def init_model():
             model_path = "OpenGVLab/InternVideo2_5_Chat_8B"
             progress = "intialized message and model path"
             if "tokenizer" not in config:
-                config["tokenizer"] = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+                local_dir = snapshot_download(model_path)
+                tokenizer = AutoTokenizer.from_pretrained(local_dir, trust_remote_code=True)
                 progress = "initialized tokenizer"
             else:
                 message = "Tokenizer already loaded"
