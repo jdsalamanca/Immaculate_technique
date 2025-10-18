@@ -11,6 +11,7 @@ import os
 from asyncio import Lock
 from huggingface_hub import snapshot_download
 from src.preprocessing_functions import load_video
+from google.cloud import storage
 
 load_lock = Lock()
 config: dict[str, Any] = {"max_num_frames": 512}
@@ -67,7 +68,7 @@ upload_dir = "./videos"
 os.makedirs(upload_dir, exist_ok=True)
 
 @app.post("/init")
-async def init_model():
+async def init():
     try:
         start = datetime.now()
         async with load_lock: 
@@ -92,6 +93,42 @@ async def init_model():
     except Exception as e:
         tb_str = traceback.format_exc()
         return {"Error": f"Error laoding model: {str(e)}", "traceback": tb_str, "path":model_path, "path_type": str(type(model_path)), "progress": progress}
+
+@app.post("init_model")
+async def init_model():
+    try:
+        local_model_dir = "model"
+        local_tokenizer_dir = "tokenizer"
+        os.makedirs(local_model_dir, exist_ok=True)
+        os.makedirs(local_tokenizer_dir, exist_ok=True)
+        message = "Local dirs created \n"
+        client = storage.Client()
+        message = "Connection to client established \n"
+        bucket = client.bucket("video_to_text_models")
+        blobs = bucket.list_blobs()
+        message = "Bucket and blobs reached \n"
+        for blob in blobs:
+            blob_name = blob.name
+            if "OpenGVLab" in blob_name:
+                idx = blob_name.rfind("/") + 1
+                file_name = blob_name[idx:]
+                if "model" in blob_name:
+                    local_path = os.path.join(local_model_dir, file_name)
+                elif: "tokenizer" in blob_name:
+                    local_path = os.path.join(local_tokenizer_dir, file_name)
+                else:
+                    continue
+                blob.download_to_filename(local_path)
+        message = "Files downloaded \n"  
+        tokenizer = AutoTokenizer.from_pretrained(local_tokenizer_dir, trust_remote_code=True)
+        message = "Tokenizer initiated \n"
+        model = AutoModel.from_pretrained(local_model_dir, trust_remote_code=True).half().cuda().to(torch.bfloat16)
+        message = "Model initiated \n"
+        config["model"] = model
+        config["tokenizer"] = tokenizer
+        return {"Message": message, "Latency": str(datetime.now()-start)}
+    except Exception as e:
+        return {"Error": f"Error laoding model: {str(e)}", "traceback": tb_str, "progress": message}
 
 @app.post("/review")
 async def get_review(file: UploadFile=File(...), exercise: str=Form(...)):
