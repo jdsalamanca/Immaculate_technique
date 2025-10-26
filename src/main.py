@@ -114,7 +114,7 @@ async def init_model():
                 file_name = blob_name[idx:]
                 if "model" in blob_name:
                     local_path = os.path.join(local_model_dir, file_name)
-                elif: "tokenizer" in blob_name:
+                elif "tokenizer" in blob_name:
                     local_path = os.path.join(local_tokenizer_dir, file_name)
                 else:
                     continue
