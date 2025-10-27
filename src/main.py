@@ -97,6 +97,7 @@ async def init():
 @app.post("init_model")
 async def init_model():
     try:
+        start = datetime.now()
         local_model_dir = "model"
         local_tokenizer_dir = "tokenizer"
         os.makedirs(local_model_dir, exist_ok=True)
@@ -128,6 +129,7 @@ async def init_model():
         config["tokenizer"] = tokenizer
         return {"Message": message, "Latency": str(datetime.now()-start)}
     except Exception as e:
+        tb_str = traceback.format_exc()
         return {"Error": f"Error laoding model: {str(e)}", "traceback": tb_str, "progress": message}
 
 @app.post("/review")
