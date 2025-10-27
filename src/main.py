@@ -97,36 +97,37 @@ async def init():
 @app.post("init_model")
 async def init_model():
     try:
-        start = datetime.now()
-        local_model_dir = "model"
-        local_tokenizer_dir = "tokenizer"
-        os.makedirs(local_model_dir, exist_ok=True)
-        os.makedirs(local_tokenizer_dir, exist_ok=True)
-        message = "Local dirs created \n"
-        client = storage.Client()
-        message = "Connection to client established \n"
-        bucket = client.bucket("video_to_text_models")
-        blobs = bucket.list_blobs()
-        message = "Bucket and blobs reached \n"
-        for blob in blobs:
-            blob_name = blob.name
-            if "OpenGVLab" in blob_name:
-                idx = blob_name.rfind("/") + 1
-                file_name = blob_name[idx:]
-                if "model" in blob_name:
-                    local_path = os.path.join(local_model_dir, file_name)
-                elif "tokenizer" in blob_name:
-                    local_path = os.path.join(local_tokenizer_dir, file_name)
-                else:
-                    continue
-                blob.download_to_filename(local_path)
-        message = "Files downloaded \n"  
-        tokenizer = AutoTokenizer.from_pretrained(local_tokenizer_dir, trust_remote_code=True)
-        message = "Tokenizer initiated \n"
-        model = AutoModel.from_pretrained(local_model_dir, trust_remote_code=True).half().cuda().to(torch.bfloat16)
-        message = "Model initiated \n"
-        config["model"] = model
-        config["tokenizer"] = tokenizer
+        async with load_lock: 
+            start = datetime.now()
+            local_model_dir = "model"
+            local_tokenizer_dir = "tokenizer"
+            os.makedirs(local_model_dir, exist_ok=True)
+            os.makedirs(local_tokenizer_dir, exist_ok=True)
+            message = "Local dirs created \n"
+            client = storage.Client()
+            message = "Connection to client established \n"
+            bucket = client.bucket("video_to_text_models")
+            blobs = bucket.list_blobs()
+            message = "Bucket and blobs reached \n"
+            for blob in blobs:
+                blob_name = blob.name
+                if "OpenGVLab" in blob_name:
+                    idx = blob_name.rfind("/") + 1
+                    file_name = blob_name[idx:]
+                    if "model" in blob_name:
+                        local_path = os.path.join(local_model_dir, file_name)
+                    elif "tokenizer" in blob_name:
+                        local_path = os.path.join(local_tokenizer_dir, file_name)
+                    else:
+                        continue
+                    blob.download_to_filename(local_path)
+            message = "Files downloaded \n"  
+            tokenizer = AutoTokenizer.from_pretrained(local_tokenizer_dir, trust_remote_code=True)
+            message = "Tokenizer initiated \n"
+            model = AutoModel.from_pretrained(local_model_dir, trust_remote_code=True).half().cuda().to(torch.bfloat16)
+            message = "Model initiated \n"
+            config["model"] = model
+            config["tokenizer"] = tokenizer
         return {"Message": message, "Latency": str(datetime.now()-start)}
     except Exception as e:
         tb_str = traceback.format_exc()
