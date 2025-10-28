@@ -94,7 +94,7 @@ async def init():
         tb_str = traceback.format_exc()
         return {"Error": f"Error laoding model: {str(e)}", "traceback": tb_str, "path":model_path, "path_type": str(type(model_path)), "progress": progress}
 
-@app.post("init_model")
+@app.post("/init_model")
 async def init_model():
     try:
         async with load_lock: 
